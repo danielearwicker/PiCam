@@ -1,0 +1,25 @@
+{
+  "name": "video",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/koa": "^2.0.39",
+    "@types/koa-router": "^7.0.22",
+    "@types/koa-static": "^3.0.0",
+    "@types/log4js": "0.0.32",
+    "@types/mz": "0.0.31",
+    "@types/node": "^8.0.13",
+    "koa": "^2.3.0",
+    "koa-router": "^7.2.1",
+    "koa-static": "^4.0.1",
+    "log4js": "^1.1.1",
+    "mz": "^2.6.0",
+    "typescript": "^2.4.1"
+  }
+}

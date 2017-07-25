@@ -1,0 +1,4 @@
+node_modules
+built
+server/data
+server/logs
