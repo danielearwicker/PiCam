@@ -10,12 +10,24 @@ import * as koaStatic from "koa-static";
 import { Frame } from "../common/api";
 import { pad } from "../common/pad";
 
-const dataDir = path.join(__dirname, "..", "..", "data");
+const rootDir = path.normalize(path.join(__dirname, "..", ".."));
+const dataDir = path.normalize(path.join(rootDir, "data"));
+const staticDir = path.normalize(path.join(rootDir, "..", "client"));
 
 const router = new Router();
 
+router.get('/version', async ctx => {
+    ctx.body = {
+        version: "0.1.0",
+        __dirname,
+        rootDir,
+        dataDir,
+        staticDir
+    };
+});
+
 router.get('/cameras', async ctx => {
-    ctx.body = await fs.readdir(dataDir);
+    ctx.body = (await fs.readdir(dataDir)).filter(n => n[0] !== '.');
 });
 
 interface CameraContext extends Router.IRouterContext {
@@ -76,6 +88,9 @@ router.get('/frame/:device/:year/:month/:date/:hour/:minute/:second/:ms/:motion/
 });
 
 function parseFrameName(name: string): Frame | undefined {
+    if (name[0] === '.') {
+        return;
+    }
     const hour = parseInt(name.substr(0, 2), 10),
           minute = parseInt(name.substr(3, 2), 10),
           second = parseInt(name.substr(6, 2), 10),
@@ -95,7 +110,7 @@ function parseFrameName(name: string): Frame | undefined {
 
 new Koa().use(router.routes())
          .use(router.allowedMethods())
-         .use(koaStatic("../client"))
+         .use(koaStatic(staticDir))
          .listen(3030);
 
 log4js.configure({

@@ -2,3 +2,5 @@ node_modules
 built
 server/data
 server/logs
+.DS_Store
+._*
