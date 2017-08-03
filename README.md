@@ -16,7 +16,7 @@ You need Node on your Pi and [this is a very thorough guide](http://thisdavej.co
 You also need ffmpeg. Again [this guide is very simple](https://github.com/tgogos/rpi_ffmpeg) - you can
 basically paste that script into a file and run it.
 
-## Client
+## Client
 
 In `client`, do:
 
