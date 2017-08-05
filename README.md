@@ -31,7 +31,7 @@ If you need the IP address of your Pi, run `ifconfig` and look at the `wlan0` se
 You also need ffmpeg. Again [this guide is very simple](https://github.com/tgogos/rpi_ffmpeg) - you can
 basically paste that script into a file and run it.
 
-## Client
+## Client
 
 In `client`, do:
 
