@@ -13,6 +13,21 @@ The UI currently sucks.
 
 You need Node on your Pi and [this is a very thorough guide](http://thisdavej.com/beginners-guide-to-installing-node-js-on-a-raspberry-pi/) to get you to that point.
 
+I prefer Raspian Lite to leave as much space as possible for images. Get a good (Samsung) 128 GB 
+micro SD card. Put Raspian Lite on it, boot it up and run `raspi-config`. Change the `pi` password
+and switch on SSH. Finally get Wifi working by editing this config file:
+
+    sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+
+And add:
+
+    network={
+            ssid="YourNetworkName"
+            psk="YourPassword"
+    }
+
+If you need the IP address of your Pi, run `ifconfig` and look at the `wlan0` section of the output.
+
 You also need ffmpeg. Again [this guide is very simple](https://github.com/tgogos/rpi_ffmpeg) - you can
 basically paste that script into a file and run it.
 

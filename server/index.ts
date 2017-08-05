@@ -7,8 +7,9 @@ import * as express from "express";
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import * as koaStatic from "koa-static";
-import { Frame } from "../common/api";
+import { Frame, msFromFrame } from "../common/api";
 import { pad } from "../common/pad";
+import { sleep } from "../common/sleep";
 
 const rootDir = path.normalize(path.join(__dirname, "..", ".."));
 const dataDir = path.normalize(path.join(rootDir, "data"));
@@ -39,6 +40,7 @@ interface CameraContext extends Router.IRouterContext {
     },
     query: {
         threshold: string;
+        after: string;
     }
 }
 
@@ -46,13 +48,15 @@ router.get('/camera/:device/:year/:month/:date', async (ctx: CameraContext) => {
 
     const { device, year, month, date } = ctx.params;
     const threshold = parseInt(ctx.query.threshold || "1", 10);
+    const after = ctx.query.after ? msFromFrame(JSON.parse(ctx.query.after) as Frame) : 0;
 
     const frameFiles = await fs.readdir(path.join(
         dataDir, device, "archive", 
         pad(year, 4), pad(month, 2), pad(date, 2)));
 
     ctx.body = frameFiles.map(parseFrameName)
-                         .filter(f => f && f.motion >= threshold);
+                         .filter(f => f && f.motion >= threshold && 
+                                    (msFromFrame(f) > after));
 });
 
 interface FrameContext extends Router.IRouterContext {
@@ -162,9 +166,6 @@ async function createIfNeeded(dir: string) {
     }
 }
 
-function sleep(ms: number) {
-    return new Promise<void>(done => setTimeout(done, ms));
-}
 
 async function startup(...devices: string[]) {
 
