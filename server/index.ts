@@ -319,7 +319,7 @@ async function archive(bufferDir: string, archiveDir: string, quitting: () => bo
         const bufferFile = makePath(counter), nextFile = makePath(counter + 1);        
         if (await fs.exists(nextFile)) {
 
-            archiveFile(bufferFile, lastFuzzy, archiveDir);
+            lastFuzzy = await archiveFile(bufferFile, lastFuzzy, archiveDir);
 
             counter++;
             continue;
