@@ -191,7 +191,7 @@ function captureDevice(inputDevice: string, outputDir: string) {
 
     const debugLog = (b: Buffer) => logFfmpeg.debug(b.toString());
 
-    return new Promise<void>((done, fail) => {
+    return new Promise<void>(done => {
         const child = spawn("ffmpeg", 
             ["-i", inputDevice,
              "-qscale:v", "3",
@@ -201,8 +201,8 @@ function captureDevice(inputDevice: string, outputDir: string) {
         child.stdout.on("data", debugLog);
         child.stderr.on("data", debugLog);
 
-        child.on("error", fail);
-        child.on("close", code => done());
+        child.on("error", done);
+        child.on("close", done);
     });
 }
 
@@ -247,55 +247,83 @@ function getFuzzy(inputFile: string) {
     });
 }
 
-async function archive(bufferDir: string, archiveDir: string) {
+async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, archiveDir: string): Buffer {
+    const newFuzzy = await getFuzzy(bufferFile);
+    const distance = !lastFuzzy ? 100 : Math.round(getDistance(lastFuzzy, newFuzzy));
+    lastFuzzy = newFuzzy;
+
+    if (distance > 20) {
+        const now = (await fs.stat(bufferFile)).ctime;
+
+        const yearDir = path.join(archiveDir, now.getFullYear() + "");
+        await createIfNeeded(yearDir);
+
+        const monthDir = path.join(yearDir, pad(now.getMonth() + 1, 2));
+        await createIfNeeded(monthDir);
+
+        const dayDir = path.join(monthDir, pad(now.getDate(), 2));
+        await createIfNeeded(dayDir);
+
+        const h = pad(now.getHours(), 2),
+            m = pad(now.getMinutes(), 2),
+            s = pad(now.getSeconds(), 2),
+            f = pad(now.getMilliseconds(), 3),
+            d = pad(distance, 5),
+            fileName = `${h}-${m}-${s}-${f}-${d}-${bufferName}`;
+
+        await fs.rename(bufferFile, path.join(dayDir, fileName));
+
+    } else {
+
+        await fs.unlink(bufferFile);
+    }
+}
+
+async function recover() {
+    
+    const files = await fs.readdir(bufferDir);
+    files.sort();
+    
+    let lastFuzzy: Buffer|undefined = undefined;
+
+    for (const file of files) {
+
+
+    }
+}
+
+function cancellation() {
+    let cancelled = false;
+
+    return {
+        cancel() {
+            cancelled = true;
+        },
+        get() {
+            return cancelled;
+        }
+    };
+}
+
+async function archive(bufferDir: string, archiveDir: string, quitting: () => boolean) {
 
     let lastFuzzy: Buffer|undefined = undefined;
 
+    const makePath = (c: number) => path.join(bufferDir, pad(c, 9) + ".jpg");
+
     let counter = 1;
-    for (;;) {
+    while (!quitting()) {
 
-        const bufferName = pad(counter, 9) + ".jpg";
-        const bufferFile = path.join(bufferDir, bufferName);
-
-        const nextFile = path.join(bufferDir, pad(counter + 1, 9) + ".jpg");
-
+        const bufferFile = makePath(counter), nextFile = makePath(counter + 1);        
         if (await fs.exists(nextFile)) {
 
-            const newFuzzy = await getFuzzy(bufferFile);
-            const distance = !lastFuzzy ? 0 : Math.round(getDistance(lastFuzzy, newFuzzy));
-            lastFuzzy = newFuzzy;
-
-            if (distance > 20) {
-                const now = (await fs.stat(bufferFile)).ctime;
-
-                const yearDir = path.join(archiveDir, now.getFullYear() + "");
-                await createIfNeeded(yearDir);
-
-                const monthDir = path.join(yearDir, pad(now.getMonth() + 1, 2));
-                await createIfNeeded(monthDir);
-
-                const dayDir = path.join(monthDir, pad(now.getDate(), 2));
-                await createIfNeeded(dayDir);
-
-                const h = pad(now.getHours(), 2),
-                    m = pad(now.getMinutes(), 2),
-                    s = pad(now.getSeconds(), 2),
-                    f = pad(now.getMilliseconds(), 3),
-                    d = pad(distance, 5),
-                    fileName = `${h}-${m}-${s}-${f}-${d}-${bufferName}`;
-
-                await fs.rename(bufferFile, path.join(dayDir, fileName));
-
-            } else {
-
-                await fs.unlink(bufferFile);
-            }
+            archiveFile(bufferFile, lastFuzzy, archiveDir);
 
             counter++;
             continue;
         }
 
-        await sleep(500);        
+        await sleep(500);
     }
 }
 
@@ -304,14 +332,30 @@ async function monitorInput(device: string, dataDir: string) {
     const bufferDir = path.join(dataDir, "buffer");
     const archiveDir = path.join(dataDir, "archive");
 
-    await removeAll(bufferDir);
+    await recover(bufferDir, archiveDir);
 
     await createIfNeeded(bufferDir);
     await createIfNeeded(archiveDir);
 
+    for (;;) {        
+        const capture = captureDevice(inputDevice, outputDir);
+        const quit = cancellation();
+        
+        archive(bufferDir, archiveDir, quit);
+    }
+    
+    for (;;) {
+        await captureDevice(inputDevice, outputDir);
+
+        log.error(`ffmpeg stopped for device ${inputDevice} - will restart soon`);
+
+        await sleep(1000);
+    }
+}
+
     return Promise.all([
-        captureDevice(device, bufferDir),
-        archive(bufferDir, archiveDir)
+        captureDeviceAutoRestart(device, bufferDir),
+        
     ]);
 }
 
