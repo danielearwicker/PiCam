@@ -263,7 +263,7 @@ async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, arch
         const dayDir = path.join(monthDir, pad(now.getDate(), 2));
         await createIfNeeded(dayDir);
 
-        const bufferName = path.parse(bufferFile).name;
+        const bufferName = path.basename(bufferFile);
 
         const h = pad(now.getHours(), 2),
             m = pad(now.getMinutes(), 2),
