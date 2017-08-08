@@ -284,7 +284,7 @@ async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, arch
 
 async function recover(bufferDir: string, archiveDir: string) {
     
-    console.log(`Performing recovering on ${bufferDir}...`);
+    console.log(`Performing recovery on ${bufferDir}...`);
 
     const files = await fs.readdir(bufferDir);
     files.sort();
@@ -303,6 +303,8 @@ async function recover(bufferDir: string, archiveDir: string) {
 
         lastFuzzy = await archiveFile(path.join(bufferDir, file), lastFuzzy, archiveDir);
     }
+
+    console.log("Recovery complete");
 }
 
 async function archive(bufferDir: string, archiveDir: string, quitting: () => boolean) {
