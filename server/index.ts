@@ -340,9 +340,11 @@ async function monitorInput(device: string, dataDir: string) {
     await createIfNeeded(archiveDir);
 
     for (;;) {
+        log.info(`Starting capture for ${device}`);
         const capturer = captureDevice(device, bufferDir);
         const quit = cancellation();
 
+        log.info(`Starting archiving for ${device}`);
         const archiver = archive(bufferDir, archiveDir, quit.get);
         await capturer;
 
