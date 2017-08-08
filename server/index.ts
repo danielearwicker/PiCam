@@ -293,7 +293,7 @@ async function recover(bufferDir: string, archiveDir: string) {
 
     let progress = 0;
     let lastPercent = "";
-    for (const bufferFile of files) {
+    for (const file of files) {
         progress++;
         const percent = (100*progress/files.length).toFixed(2);
         if (percent !== lastPercent) {
@@ -301,7 +301,7 @@ async function recover(bufferDir: string, archiveDir: string) {
             lastPercent = percent;
         }
 
-        lastFuzzy = await archiveFile(bufferFile, lastFuzzy, archiveDir);
+        lastFuzzy = await archiveFile(path.join(bufferDir, file), lastFuzzy, archiveDir);
     }
 }
 
