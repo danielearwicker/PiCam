@@ -9,7 +9,7 @@ import * as Router from "koa-router";
 import * as koaStatic from "koa-static";
 import { Frame, msFromFrame } from "../common/api";
 import { pad } from "../common/pad";
-import { sleep } from "../common/sleep";
+import { sleep, cancellation } from "../common/sleep";
 
 const rootDir = path.normalize(path.join(__dirname, "..", ".."));
 const dataDir = path.normalize(path.join(rootDir, "data"));
@@ -247,10 +247,9 @@ function getFuzzy(inputFile: string) {
     });
 }
 
-async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, archiveDir: string): Buffer {
+async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, archiveDir: string): Promise<Buffer> {
     const newFuzzy = await getFuzzy(bufferFile);
     const distance = !lastFuzzy ? 100 : Math.round(getDistance(lastFuzzy, newFuzzy));
-    lastFuzzy = newFuzzy;
 
     if (distance > 20) {
         const now = (await fs.stat(bufferFile)).ctime;
@@ -263,6 +262,8 @@ async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, arch
 
         const dayDir = path.join(monthDir, pad(now.getDate(), 2));
         await createIfNeeded(dayDir);
+
+        const bufferName = path.parse(bufferFile).name;
 
         const h = pad(now.getHours(), 2),
             m = pad(now.getMinutes(), 2),
@@ -277,32 +278,31 @@ async function archiveFile(bufferFile: string, lastFuzzy: Buffer|undefined, arch
 
         await fs.unlink(bufferFile);
     }
+
+    return newFuzzy;
 }
 
-async function recover() {
+async function recover(bufferDir: string, archiveDir: string) {
     
+    console.log(`Performing recovering on ${bufferDir}...`);
+
     const files = await fs.readdir(bufferDir);
     files.sort();
     
     let lastFuzzy: Buffer|undefined = undefined;
 
-    for (const file of files) {
-
-
-    }
-}
-
-function cancellation() {
-    let cancelled = false;
-
-    return {
-        cancel() {
-            cancelled = true;
-        },
-        get() {
-            return cancelled;
+    let progress = 0;
+    let lastPercent = "";
+    for (const bufferFile of files) {
+        progress++;
+        const percent = (100*progress/files.length).toFixed(2);
+        if (percent !== lastPercent) {
+            console.log(`Recovering... ${percent}%`);
+            lastPercent = percent;
         }
-    };
+
+        lastFuzzy = await archiveFile(bufferFile, lastFuzzy, archiveDir);
+    }
 }
 
 async function archive(bufferDir: string, archiveDir: string, quitting: () => boolean) {
@@ -337,26 +337,20 @@ async function monitorInput(device: string, dataDir: string) {
     await createIfNeeded(bufferDir);
     await createIfNeeded(archiveDir);
 
-    for (;;) {        
-        const capture = captureDevice(inputDevice, outputDir);
-        const quit = cancellation();
-        
-        archive(bufferDir, archiveDir, quit);
-    }
-    
     for (;;) {
-        await captureDevice(inputDevice, outputDir);
+        const capturer = captureDevice(device, bufferDir);
+        const quit = cancellation();
 
-        log.error(`ffmpeg stopped for device ${inputDevice} - will restart soon`);
+        const archiver = archive(bufferDir, archiveDir, quit.get);
+        await capturer;
 
+        log.error(`ffmpeg stopped for device ${device} - will stop archiving`);
+        quit.cancel();
+        await archiver;
+
+        log.error(`archiving stopped for device ${device} - will restart soon`);
         await sleep(1000);
     }
-}
-
-    return Promise.all([
-        captureDeviceAutoRestart(device, bufferDir),
-        
-    ]);
 }
 
 startup("/dev/video0");
