@@ -3,9 +3,7 @@ import * as ReactDOM from "react-dom";
 import { Frame, msFromFrame } from "../common/api";
 import { pad } from "../common/pad";
 import { sleep } from "../common/sleep";
-
-const viewWidth = 640;
-const viewHeight = (viewWidth / 4) * 3;
+import { TimeBar } from "./TimeBar";
 
 function getDayPath(day: Date) {
     return `${day.getFullYear()}/${day.getMonth() + 1}/${day.getDate()}`;
@@ -15,90 +13,11 @@ function compareFrames(f1: Frame, f2: Frame) {
     return msFromFrame(f1) - msFromFrame(f2);
 }
 
-const msPerDay = 86400000;
-const barWidth = 2;
-const barWidthMs = barWidth * (msPerDay / viewWidth);
-
-function timeBarPixelsFromMs(ms: number) {
-    return (ms / msPerDay) * viewWidth;
-}
-
-function timeBarPixelsFromFrameIndex(frames: Frame[], index?: number) {
-    if (index == undefined || index < 0 || index >= frames.length) {
-        return undefined;
-    }
-
-    return timeBarPixelsFromMs(msFromFrame(frames[index]));
-}
-
-function msFromTimeBarPixels(pixels: number) {
-    return (pixels / viewWidth) * msPerDay;
-}
-
-interface TimeBarLine {
-    x: number;
-    stroke: string;
-    height?: number;
-}
-
-const TimeBarLine = pure(({ x, stroke, height }: TimeBarLine) => {
-    if (height === undefined) {
-        height = 1;
-    }
-    return <line key={x} x1={x} y1={(1-height)*20} x2={x} y2={20} stroke={stroke}/>;
-});
-
-function sum(ar: number[]) {
-    return ar.reduce((a, b) => a + b, 0);
-}
-
-function max(ar: number[]) {
-    return ar.reduce((a, b) => Math.max(a, b), 0);
-}
-
-function mean(ar: number[]) {
-    return ar.length === 0 ? 0 : sum(ar) / ar.length;
-}
-
-const TimeBarFrames = pure(({ frames }: { frames: Frame[] }) => {
-
-    const bars: Frame[][] = [];
-    const barWidthPixels = barWidthMs / (msPerDay / viewWidth);
-    const barCount = viewWidth / barWidthPixels;
-
-    bars.length = barCount;
-    for (let n = 0; n < barCount; n++) {
-        bars[n] = [];
-    }
-
-    for (const frame of frames) {
-        const bar = Math.floor(msFromFrame(frame) / barWidthMs);
-        if (bar < 0 || bar >= barCount) {
-            debugger;
-        }
-        bars[bar].push(frame);
-    }
-
-    const means = bars.map(bar => mean(bar.map(f => f.motion)));
-    const maxMean = max(means);
-
-    return (
-        <svg>
-        {
-            means.map((bar, i) => {
-                const x = i * barWidthPixels;
-                return <TimeBarLine key={x} stroke="silver" x={x} height={bar / maxMean}/>
-            })
-        }
-        </svg>
-    );
-});
-
-
 interface AppState {
     cameras: string[];
     camera?: string;
     day: Date;
+    dayString: string;
     frames: Frame[];
     frameIndex: number;
     frameSrc?: string;
@@ -113,6 +32,7 @@ class App extends React.Component<{}, AppState> {
         super();
         this.state = { 
             day: new Date(),
+            dayString: "",
             cameras: [],
             frames: [],
             frameIndex: 0,
@@ -124,7 +44,37 @@ class App extends React.Component<{}, AppState> {
         this.init();
     }
 
+    updateDayString() {
+
+        const year = this.state.day.getFullYear(),
+              month = this.state.day.getMonth() + 1,
+              date = this.state.day.getDate();
+
+        this.setState({
+            dayString: `${pad(year, 4)}-${pad(month, 2)}-${pad(date, 2)}`
+        });
+    }
+
+    dayStringChanged = () => {
+        return (ev: React.ChangeEvent<HTMLInputElement>) => {
+
+            const parts = ev.target.value.split("-");
+            if (parts.length == 3) {
+                this.setState({
+                    day: new Date(
+                        parseInt(parts[0], 10), 
+                        parseInt(parts[1], 10) - 1, 
+                        parseInt(parts[2], 10))
+                });
+            }
+
+            this.updateDayString();
+        }
+    }
+
     async init() {
+        this.updateDayString();
+
         const cameras = await (await fetch("cameras")).json() as string[];
         const camera = cameras[0];
         this.setState({ cameras, camera });
@@ -190,10 +140,22 @@ class App extends React.Component<{}, AppState> {
         }
     }
 
-    step(incr: number) {
-        const frameIndex = this.state.frameIndex + incr;
-        if (frameIndex >= 0 && frameIndex < this.state.frames.length) {
-            this.setState({ frameIndex });
+    step = (unit: "day" | "frame", incr: 1 | -1) => {
+        return () => {
+            switch (unit) {
+                case "day":
+                    const frameIndex = this.state.frameIndex + incr;
+                    if (frameIndex >= 0 && frameIndex < this.state.frames.length) {
+                        this.setState({ frameIndex });
+                    }
+                    break;
+                case "frame":
+                    var day = new Date(this.state.day.valueOf());
+                    day.setDate(day.getDate() + incr);                    
+                    this.setState({ day });
+                    this.updateDayString();                    
+                    break;
+            }
         }
     }
 
@@ -219,6 +181,11 @@ class App extends React.Component<{}, AppState> {
 
         return (
             <div>
+                <div>
+                    <button onClick={this.step("day", -1)}>Previous day</button>
+                    <input value={this.state.dayString} onChange={this.dayStringChanged}></input>
+                    <button onClick={this.step("day", 1)}>Next day</button>
+                </div>
                 <img width="640" height="480" src={this.state.frameSrc}/>
                 <div>
                     <TimeBar frames={this.state.frames} 
@@ -229,13 +196,13 @@ class App extends React.Component<{}, AppState> {
                     <button onClick={() => this.togglePause()}>{this.state.paused ? "Play" : "Pause"}</button>
                     { this.state.paused ? (
                         <span>
-                            <button onClick={() => this.step(-1)}>&lt;</button>
-                            <button onClick={() => this.step(1)}>&gt;</button>
+                            <button onClick={this.step("frame", -1)}>&lt;</button>
+                            <button onClick={this.step("frame", 1)}>&gt;</button>
                         </span>
                     ) : undefined }
                     <span>{ this.state.day.toDateString() } </span>
                     <span>{pad(hour, 2)}:{pad(minute, 2)}:{pad(second, 2)}:{pad(ms, 3)}</span>
-                </div>                
+                </div>
             </div>
         );
     }

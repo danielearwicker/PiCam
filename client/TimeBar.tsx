@@ -1,3 +1,23 @@
+import * as React from "react";
+import { Frame, msFromFrame } from "../common/api";
+import { TimeBarFrames } from "./TimeBarFrames";
+import { TimeBarLine } from "./TimeBarLine";
+
+function msFromTimeBarPixels(pixels: number) {
+    return (pixels / viewWidth) * msPerDay;
+}
+
+function timeBarPixelsFromMs(ms: number) {
+    return (ms / msPerDay) * viewWidth;
+}
+
+function timeBarPixelsFromFrameIndex(frames: Frame[], index?: number) {
+    if (index == undefined || index < 0 || index >= frames.length) {
+        return undefined;
+    }
+
+    return timeBarPixelsFromMs(msFromFrame(frames[index]));
+}
 
 interface TimeBarProps {
     frames: Frame[];
@@ -9,7 +29,7 @@ interface TimeBarState {
     hover?: number;
 }
 
-class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
+export class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
 
     constructor(props: TimeBarProps) {
         super(props);
