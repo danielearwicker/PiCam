@@ -172,21 +172,31 @@ class App extends React.Component<{}, AppState> {
     }
 
     render() {
+
+        const dayNav = (
+            <div>
+                <button onClick={this.step("day", -1)}>Previous day</button>
+                <input value={this.state.dayString} onChange={this.dayStringChanged}></input>
+                <button onClick={this.step("day", 1)}>Next day</button>
+            </div>
+        );
+
         const frameIndex = Math.min(this.state.frameIndex, this.state.frames.length - 1);
         const frame = this.state.frames[frameIndex];
         if (!frame) {
-            return <div>No frames have been saved yet</div>;
+            return (
+                <div>
+                    {dayNav}
+                    <div>No frames have been saved yet</div>
+                </div>
+            );
         }
 
         const { hour, minute, second, ms, motion } = frame;
 
         return (
             <div>
-                <div>
-                    <button onClick={this.step("day", -1)}>Previous day</button>
-                    <input value={this.state.dayString} onChange={this.dayStringChanged}></input>
-                    <button onClick={this.step("day", 1)}>Next day</button>
-                </div>
+                {dayNav}
                 <img width="640" height="480" src={this.state.frameSrc}/>
                 <div>
                     <TimeBar frames={this.state.frames} 
