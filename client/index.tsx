@@ -51,7 +51,8 @@ class App extends React.Component<{}, AppState> {
               date = this.state.day.getDate();
 
         this.setState({
-            dayString: `${pad(year, 4)}-${pad(month, 2)}-${pad(date, 2)}`
+            dayString: `${pad(year, 4)}-${pad(month, 2)}-${pad(date, 2)}`,
+            frames: []
         });
     }
 
@@ -143,17 +144,17 @@ class App extends React.Component<{}, AppState> {
     step = (unit: "day" | "frame", incr: 1 | -1) => {
         return () => {
             switch (unit) {
-                case "day":
+                case "frame":
                     const frameIndex = this.state.frameIndex + incr;
                     if (frameIndex >= 0 && frameIndex < this.state.frames.length) {
                         this.setState({ frameIndex });
                     }
                     break;
-                case "frame":
+                case "day":
                     var day = new Date(this.state.day.valueOf());
                     day.setDate(day.getDate() + incr);                    
                     this.setState({ day });
-                    this.updateDayString();                    
+                    this.updateDayString();
                     break;
             }
         }
