@@ -4,14 +4,6 @@ import { Frame, msFromFrame } from "../common/api";
 import { pad } from "../common/pad";
 import { sleep } from "../common/sleep";
 
-function pure<Props>(func: (props: Props) => JSX.Element) {
-  return class extends React.PureComponent<Props> {
-    render() {
-      return func(this.props);
-    }
-  }  
-}
-
 const viewWidth = 640;
 const viewHeight = (viewWidth / 4) * 3;
 
@@ -102,72 +94,6 @@ const TimeBarFrames = pure(({ frames }: { frames: Frame[] }) => {
     );
 });
 
-interface TimeBarProps {
-    frames: Frame[];
-    selected?: number;
-    frameClicked(index: number): void;
-}
-
-interface TimeBarState {
-    hover?: number;
-}
-
-class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
-
-    constructor(props: TimeBarProps) {
-        super(props);
-        this.state = { };
-    }
-
-    mouseMove = (e: React.MouseEvent<SVGElement>) => {
-        let hover: number|undefined = undefined;
-
-        const ms = msFromTimeBarPixels(e.clientX - 
-            e.currentTarget.getBoundingClientRect().left);
-
-        const l = this.props.frames.length;
-        for (let f = 0; f < l; f++) {
-            const frame = this.props.frames[f];
-            const frameMs = msFromFrame(frame);
-            if (ms <= frameMs) {
-                hover = f;
-                break;
-            }
-        }
-
-        if (hover === undefined && l > 0) {
-            hover = 0;
-        }
-
-        this.setState({ hover });
-    }
-
-    mouseLeave = (e: React.MouseEvent<SVGElement>) => {
-        this.setState({ hover: undefined });
-    }
-
-    mouseDown = (e: React.MouseEvent<SVGElement>) => {
-        if (this.state.hover !== undefined) {
-            this.props.frameClicked(this.state.hover);
-        }
-    }
-
-    render() {
-        const hover = timeBarPixelsFromFrameIndex(this.props.frames, this.state.hover);
-        const selected = timeBarPixelsFromFrameIndex(this.props.frames, this.props.selected);
-
-        return (
-            <svg width={640} height={20}
-                onMouseMove={this.mouseMove}
-                onMouseLeave={this.mouseLeave}
-                onMouseDown={this.mouseDown}>
-                <TimeBarFrames frames={this.props.frames} />
-                { hover !== undefined ? <TimeBarLine stroke="blue" x={hover}/> : undefined }
-                { selected !== undefined ? <TimeBarLine stroke="green" x={selected}/> : undefined }
-            </svg>
-        );
-    }
-}
 
 interface AppState {
     cameras: string[];
