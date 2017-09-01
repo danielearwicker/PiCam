@@ -2,6 +2,7 @@ import * as React from "react";
 import { Frame, msFromFrame } from "../common/api";
 import { TimeBarFrames } from "./TimeBarFrames";
 import { TimeBarLine } from "./TimeBarLine";
+import { msPerDay, viewWidth } from "./constants";
 
 function msFromTimeBarPixels(pixels: number) {
     return (pixels / viewWidth) * msPerDay;

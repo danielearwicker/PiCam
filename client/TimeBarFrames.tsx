@@ -2,6 +2,7 @@ import * as React from "react";
 import { Frame, msFromFrame } from "../common/api";
 import { pure, mean, max } from "./util";
 import { TimeBarLine } from "./TimeBarLine";
+import { msPerDay, viewWidth, barWidthMs } from "./constants";
 
 export const TimeBarFrames = pure(({ frames }: { frames: Frame[] }) => {
     
