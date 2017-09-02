@@ -56,26 +56,24 @@ class App extends React.Component<{}, AppState> {
         });
     }
 
-    dayStringChanged = () => {
-        return (ev: React.ChangeEvent<HTMLInputElement>) => {
+    dayStringChanged = (ev: React.ChangeEvent<HTMLInputElement>) => {
 
-            this.setState({ dayString: ev.target.value });
+        this.setState({ dayString: ev.target.value });
 
-            const parts = ev.target.value.split("-");
-            if (parts.length == 3) {
-                const year = parseInt(parts[0], 10),
-                      month = parseInt(parts[1], 10) - 1,
-                      date = parseInt(parts[2], 10);
+        const parts = ev.target.value.split("-");
+        if (parts.length == 3) {
+            const year = parseInt(parts[0], 10),
+                    month = parseInt(parts[1], 10) - 1,
+                    date = parseInt(parts[2], 10);
 
-                if (year !== this.state.day.getFullYear() ||
-                    month !== this.state.day.getMonth() ||
-                    date !== this.state.day.getDate()) {
+            if (year !== this.state.day.getFullYear() ||
+                month !== this.state.day.getMonth() ||
+                date !== this.state.day.getDate()) {
 
-                    this.setState({ 
-                        day: new Date(year, month, date),
-                        frames: [] 
-                    });
-                }
+                this.setState({ 
+                    day: new Date(year, month, date),
+                    frames: [] 
+                });
             }
         }
     }
