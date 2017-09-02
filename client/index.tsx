@@ -95,11 +95,13 @@ class App extends React.Component<{}, AppState> {
                     uri += "?after=" + JSON.stringify(lastFrame);
                 }
 
-                const frames = (await (await fetch(uri)).json()) as Frame[];
-                if (frames.length) {
-                    frames.sort(compareFrames);
-                    this.setState({ frames: this.state.frames.concat(frames) });
-                }
+                try {
+                    const frames = (await (await fetch(uri)).json()) as Frame[];
+                    if (frames.length) {
+                        frames.sort(compareFrames);
+                        this.setState({ frames: this.state.frames.concat(frames) });
+                    }
+                } catch (x) { }
             }
 
             await sleep(1000);
@@ -125,19 +127,22 @@ class App extends React.Component<{}, AppState> {
                 day = getDayPath(this.state.day),
                 info = this.state.frames[this.state.frameIndex],
                 { hour, minute, second, ms, motion, frame } = info,
-                path = `${hour}/${minute}/${second}/${ms}/${motion}/${frame}`,
-                blob = await (await fetch(`frame/${camera}/${day}/${path}`)).blob();
+                path = `${hour}/${minute}/${second}/${ms}/${motion}/${frame}`;
+                
+            try {
+                const blob = await (await fetch(`frame/${camera}/${day}/${path}`)).blob();
 
-            if (this.state.frameSrc) {
-                URL.revokeObjectURL(this.state.frameSrc);
-            }
+                if (this.state.frameSrc) {
+                    URL.revokeObjectURL(this.state.frameSrc);
+                }
 
-            this.loadedFrame = this.state.frameIndex;
+                this.loadedFrame = this.state.frameIndex;
 
-            this.setState({ 
-                frameSrc: URL.createObjectURL(blob),
-                frameIndex: this.state.frameIndex + (this.state.paused ? 0 : 1)
-            });            
+                this.setState({ 
+                    frameSrc: URL.createObjectURL(blob),
+                    frameIndex: this.state.frameIndex + (this.state.paused ? 0 : 1)
+                });  
+            } catch (x) { }          
         }
     }
 
