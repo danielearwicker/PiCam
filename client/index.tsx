@@ -63,17 +63,17 @@ class App extends React.Component<{}, AppState> {
         const parts = ev.target.value.split("-");
         if (parts.length == 3) {
             const year = parseInt(parts[0], 10),
-                    month = parseInt(parts[1], 10) - 1,
-                    date = parseInt(parts[2], 10);
+                  month = parseInt(parts[1], 10) - 1,
+                  date = parseInt(parts[2], 10);
 
             if (year !== this.state.day.getFullYear() ||
                 month !== this.state.day.getMonth() ||
                 date !== this.state.day.getDate()) {
 
-                this.setState({ 
-                    day: new Date(year, month, date),
-                    frames: [] 
-                });
+                const day = new Date(year, month, date);                
+                if (day <= new Date() && day > new Date(2017, 7, 1)) {
+                    this.setState({ day, frames: [] });
+                }
             }
         }
     }
