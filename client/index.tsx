@@ -44,11 +44,11 @@ class App extends React.Component<{}, AppState> {
         this.init();
     }
 
-    updateDayString() {
+    updateDayString(day: Date) {
 
-        const year = this.state.day.getFullYear(),
-              month = this.state.day.getMonth() + 1,
-              date = this.state.day.getDate();
+        const year = day.getFullYear(),
+              month = day.getMonth() + 1,
+              date = day.getDate();
 
         this.setState({
             dayString: `${pad(year, 4)}-${pad(month, 2)}-${pad(date, 2)}`,
@@ -79,7 +79,7 @@ class App extends React.Component<{}, AppState> {
     }
 
     async init() {
-        this.updateDayString();
+        this.updateDayString(this.state.day);
 
         const cameras = await (await fetch("cameras")).json() as string[];
         const camera = cameras[0];
@@ -164,7 +164,7 @@ class App extends React.Component<{}, AppState> {
                     var day = new Date(this.state.day.valueOf());
                     day.setDate(day.getDate() + incr);                    
                     this.setState({ day });
-                    this.updateDayString();
+                    this.updateDayString(day);
                     break;
             }
         }
