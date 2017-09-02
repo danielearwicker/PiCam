@@ -215,12 +215,14 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <div>
                     <button onClick={() => this.togglePause()}>{this.state.paused ? "Play" : "Pause"}</button>
-                    { this.state.paused ? (
-                        <span>
-                            <button onClick={this.step("frame", -1)}>&lt;</button>
-                            <button onClick={this.step("frame", 1)}>&gt;</button>
-                        </span>
-                    ) : undefined }
+                    { 
+                        this.state.paused ? (
+                            <span>
+                                <button onClick={this.step("frame", -1)}>&lt;</button>
+                                <button onClick={this.step("frame", 1)}>&gt;</button>
+                            </span>
+                        ) : undefined 
+                    }
                     <span>{ this.state.day.toDateString() } </span>
                     <span>{pad(hour, 2)}:{pad(minute, 2)}:{pad(second, 2)}:{pad(ms, 3)}</span>
                 </div>
