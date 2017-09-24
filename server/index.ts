@@ -114,7 +114,9 @@ function parseFrameName(name: string): Frame | undefined {
 
 new Koa().use(router.routes())
          .use(router.allowedMethods())
-         .use(koaStatic(staticDir))
+         .use(koaStatic(staticDir, {
+             hidden: true // to allow Let's Encrypt cert verify
+         }))
          .listen(3030);
 
 log4js.configure({
