@@ -4,231 +4,62 @@ import { Frame, msFromFrame } from "../common/api";
 import { pad } from "../common/pad";
 import { sleep } from "../common/sleep";
 import { TimeBar } from "./TimeBar";
+import { TextInput } from "bidi-mobx";
+import { VideoArchive, CameraSelection, VideoPlayer } from "./models";
+import { observer } from "mobx-react";
 
-function getDayPath(day: Date) {
-    return `${day.getFullYear()}/${day.getMonth() + 1}/${day.getDate()}`;
+interface AppProps {
+    model: VideoPlayer;
 }
 
-function compareFrames(f1: Frame, f2: Frame) {
-    return msFromFrame(f1) - msFromFrame(f2);
-}
+const App = observer(({model}: AppProps) => {
 
-interface AppState {
-    cameras: string[];
-    camera?: string;
-    day: Date;
-    dayString: string;
-    frames: Frame[];
-    frameIndex: number;
-    frameSrc?: string;
-    paused: boolean;
-}
+    const dayNav = (
+        <div>
+            <button onClick={model.decrDay}>Previous day</button>
+            <TextInput value={model.day} />            
+            <button onClick={model.incrDay}>Next day</button>
+        </div>
+    );
 
-class App extends React.Component<{}, AppState> {
-
-    loadedFrame?: number;
-    
-    constructor() {
-        super();
-        this.state = { 
-            day: new Date(),
-            dayString: "",
-            cameras: [],
-            frames: [],
-            frameIndex: 0,
-            paused: false
-        };
-    }
-
-    componentDidMount() {
-        this.init();
-    }
-
-    updateDayString(day: Date) {
-
-        const year = day.getFullYear(),
-              month = day.getMonth() + 1,
-              date = day.getDate();
-
-        this.setState({
-            dayString: `${pad(year, 4)}-${pad(month, 2)}-${pad(date, 2)}`,
-            frames: []
-        });
-    }
-
-    dayStringChanged = (ev: React.ChangeEvent<HTMLInputElement>) => {
-
-        this.setState({ dayString: ev.target.value });
-
-        const parts = ev.target.value.split("-");
-        if (parts.length == 3) {
-            const year = parseInt(parts[0], 10),
-                  month = parseInt(parts[1], 10) - 1,
-                  date = parseInt(parts[2], 10);
-
-            if (year !== this.state.day.getFullYear() ||
-                month !== this.state.day.getMonth() ||
-                date !== this.state.day.getDate()) {
-
-                const day = new Date(year, month, date);                
-                if (day <= new Date() && day > new Date(2017, 7, 1)) {
-                    this.setState({ day, frames: [] });
-                }
-            }
-        }
-    }
-
-    async init() {
-        this.updateDayString(this.state.day);
-
-        const cameras = await (await fetch("cameras")).json() as string[];
-        const camera = cameras[0];
-        this.setState({ cameras, camera });
-
-        this.pullFrames();
-        this.pullImages();
-    }
-
-    async pullFrames() {
-
-        for (;;) {
-            if (this.state.camera) { 
-                
-                let uri = `camera/${this.state.camera}/${getDayPath(this.state.day)}`;
-                const lastFrame = this.state.frames[this.state.frames.length - 1];
-                if (lastFrame) {
-                    uri += "?after=" + JSON.stringify(lastFrame);
-                }
-
-                try {
-                    const frames = (await (await fetch(uri)).json()) as Frame[];
-                    if (frames.length) {
-                        frames.sort(compareFrames);
-                        this.setState({ frames: this.state.frames.concat(frames) });
-                    }
-                } catch (x) { }
-            }
-
-            await sleep(1000);
-        }
-    }
-
-    async pullImages() {
-
-        for (;;) {
-
-            if (this.loadedFrame === undefined && this.state.frames.length) {
-                this.setState({ frameIndex: this.state.frames.length - 1 });
-            }
-
-            if (this.state.frameIndex >= this.state.frames.length ||
-                this.loadedFrame === this.state.frameIndex) {
-
-                await sleep(250);
-                continue;
-            }
-
-            const camera = this.state.camera,
-                day = getDayPath(this.state.day),
-                info = this.state.frames[this.state.frameIndex],
-                { hour, minute, second, ms, motion, frame } = info,
-                path = `${hour}/${minute}/${second}/${ms}/${motion}/${frame}`;
-                
-            try {
-                const blob = await (await fetch(`frame/${camera}/${day}/${path}`)).blob();
-
-                if (this.state.frameSrc) {
-                    URL.revokeObjectURL(this.state.frameSrc);
-                }
-
-                this.loadedFrame = this.state.frameIndex;
-
-                this.setState({ 
-                    frameSrc: URL.createObjectURL(blob),
-                    frameIndex: this.state.frameIndex + (this.state.paused ? 0 : 1)
-                });  
-            } catch (x) { }          
-        }
-    }
-
-    step = (unit: "day" | "frame", incr: 1 | -1) => {
-        return () => {
-            switch (unit) {
-                case "frame":
-                    const frameIndex = this.state.frameIndex + incr;
-                    if (frameIndex >= 0 && frameIndex < this.state.frames.length) {
-                        this.setState({ frameIndex });
-                    }
-                    break;
-                case "day":
-                    var day = new Date(this.state.day.valueOf());
-                    day.setDate(day.getDate() + incr);                    
-                    this.setState({ day });
-                    this.updateDayString(day);
-                    break;
-            }
-        }
-    }
-
-    togglePause() {
-        if (this.loadedFrame) {
-            this.loadedFrame--;
-        }
-        this.setState({ paused: !this.state.paused });
-    }
-
-    frameClicked = (frameIndex: number) => {
-        this.setState({ frameIndex });
-    }
-
-    render() {
-
-        const dayNav = (
-            <div>
-                <button onClick={this.step("day", -1)}>Previous day</button>
-                <input value={this.state.dayString} onChange={this.dayStringChanged}></input>
-                <button onClick={this.step("day", 1)}>Next day</button>
-            </div>
-        );
-
-        const frameIndex = Math.min(this.state.frameIndex, this.state.frames.length - 1);
-        const frame = this.state.frames[frameIndex];
-        if (!frame) {
-            return (
-                <div>
-                    {dayNav}
-                    <div>No frames have been saved yet</div>
-                </div>
-            );
-        }
-
-        const { hour, minute, second, ms, motion } = frame;
-
+    if (!model.currentFrame) {
         return (
             <div>
                 {dayNav}
-                <img width="640" height="480" src={this.state.frameSrc}/>
-                <div>
-                    <TimeBar frames={this.state.frames} 
-                             selected={frameIndex}
-                             frameClicked={this.frameClicked}/>
-                </div>
-                <div>
-                    <button onClick={() => this.togglePause()}>{this.state.paused ? "Play" : "Pause"}</button>
-                    { 
-                        this.state.paused ? (
-                            <span>
-                                <button onClick={this.step("frame", -1)}>&lt;</button>
-                                <button onClick={this.step("frame", 1)}>&gt;</button>
-                            </span>
-                        ) : undefined 
-                    }
-                    <span>{ this.state.day.toDateString() } </span>
-                    <span>{pad(hour, 2)}:{pad(minute, 2)}:{pad(second, 2)}:{pad(ms, 3)}</span>
-                </div>
+                <div>No frames have been saved yet</div>
             </div>
         );
     }
-}
 
-ReactDOM.render(<App/>, document.querySelector("#root")!);
+    const { hour, minute, second, ms } = model.currentFrame;
+
+    return (
+        <div>
+            {dayNav}
+            <img width="640" height="480" src={model.frameSrc}/>
+            <div>
+                <TimeBar frames={model.frames} 
+                         selected={model.neededFrameIndex}
+                         frameClicked={model.frameClicked}/>
+            </div>
+            <div>
+                <button onClick={model.togglePause}>{model.paused ? "Play" : "Pause"}</button>
+                { 
+                    model.paused ? (
+                        <span>
+                            <button onClick={model.decrFrame}>&lt;</button>
+                            <button onClick={model.incrFrame}>&gt;</button>
+                        </span>
+                    ) : undefined 
+                }
+                <span>{pad(hour, 2)}:{pad(minute, 2)}:{pad(second, 2)}:{pad(ms, 3)}</span>
+            </div>
+        </div>
+    );
+});
+
+const videoArchive = new VideoArchive();
+const cameraSelection = new CameraSelection(videoArchive);
+const videoPlayer = new VideoPlayer(cameraSelection);
+
+ReactDOM.render(<App model={videoPlayer}/>, document.querySelector("#root")!);
