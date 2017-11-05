@@ -1,9 +1,9 @@
 git pull
 pushd client
-npm install
+echo NOT npm install
 npx webpack
 popd
 pushd server
-npm install
+echo NOT npm install
 npx tsc
 sudo service PiCam restart
