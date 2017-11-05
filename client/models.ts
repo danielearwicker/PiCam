@@ -125,11 +125,13 @@ export class CameraSelection {
     @observable private _currentCamera: CameraArchive | undefined;
 
     @computed get currentCamera() {
-        return this._currentCamera || this.archive.cameras[0];
+        return this._currentCamera || 
+               !!this.archive.cameras.length && this.archive.cameras[0] ||
+               undefined;
     }
     
     @computed get currentCameraName() {
-        return this.currentCamera && this.currentCamera.name;
+        return (this.currentCamera && this.currentCamera.name) || "";
     }
     set currentCameraName(name: string) {
         this._currentCamera = this.archive.cameras.find(c => c.name === name);
@@ -211,7 +213,8 @@ export class VideoPlayer {
 
         for (;;) {
             const day = this.currentDay;
-            if (!day) {
+            const camera = this.cameraSelection.currentCamera;
+            if (!day || !camera) {
                 await sleep(100);
                 continue;
             }                
@@ -228,8 +231,7 @@ export class VideoPlayer {
 
             try {                    
                 const blob = await loadFrameImage(
-                    this.cameraSelection.currentCamera.name,
-                    day.day, day.frames[this.neededFrameIndex]
+                    camera.name, day.day, day.frames[this.neededFrameIndex]
                 );
 
                 if (this.frameSrc) {
