@@ -76,9 +76,9 @@ export class DayFrames {
 
                 } catch (x) { }
             }
-
-            await sleep(1000);
         }
+
+        await sleep(1000);
     }
 }
 
@@ -211,36 +211,38 @@ export class VideoPlayer {
 
         for (;;) {
             const day = this.currentDay;
-            if (day) {                
-                if (this.neededFrameIndex === -1 && day.frames.length) {
-                    runInAction(() => this.neededFrameIndex = day.frames.length - 1);
-                }
-
-                if (this.neededFrameIndex >= day.frames.length ||
-                    this.loadedFrameIndex === this.neededFrameIndex) {
-
-                    await sleep(250);
-                    continue;
-                }
-
-                try {                    
-                    const blob = await loadFrameImage(
-                        this.cameraSelection.currentCamera.name,
-                        day.day, day.frames[this.neededFrameIndex]
-                    );
-
-                    if (this.frameSrc) {
-                        URL.revokeObjectURL(this.frameSrc);
-                    }
-
-                    runInAction(() => {
-                        this.loadedFrameIndex = this.neededFrameIndex;
-                        this.frameSrc = URL.createObjectURL(blob);
-                        this.neededFrameIndex += (this.paused ? 0 : 1)
-                    });
-
-                } catch (x) { }
+            if (!day) {
+                await sleep(100);
+                continue;
+            }                
+            if (this.neededFrameIndex === -1 && day.frames.length) {
+                runInAction(() => this.neededFrameIndex = day.frames.length - 1);
             }
+
+            if (this.neededFrameIndex >= day.frames.length ||
+                this.loadedFrameIndex === this.neededFrameIndex) {
+
+                await sleep(250);
+                continue;
+            }
+
+            try {                    
+                const blob = await loadFrameImage(
+                    this.cameraSelection.currentCamera.name,
+                    day.day, day.frames[this.neededFrameIndex]
+                );
+
+                if (this.frameSrc) {
+                    URL.revokeObjectURL(this.frameSrc);
+                }
+
+                runInAction(() => {
+                    this.loadedFrameIndex = this.neededFrameIndex;
+                    this.frameSrc = URL.createObjectURL(blob);
+                    this.neededFrameIndex += (this.paused ? 0 : 1)
+                });
+
+            } catch (x) { }            
         }
     }
 }
