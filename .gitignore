@@ -1,5 +1,6 @@
 /client/node_modules
 /server/node_modules
+/node_modules/picam-common/node_modules
 built
 server/data
 server/logs
