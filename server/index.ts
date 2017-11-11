@@ -110,12 +110,12 @@ function parseFrameName(name: string): Frame | undefined {
     return { hour, minute, second, ms, frame, motion };
 }
 
-new Koa().use(cors({ origin: () => true }))
-         .use(router.routes())
+new Koa().use(router.routes())
          .use(router.allowedMethods())
          .use(koaStatic(staticDir, {
              hidden: true // to allow Let's Encrypt cert verify
          }))
+         .use(cors({ origin: () => true }))
          .listen(3030);
 
 log4js.configure({
