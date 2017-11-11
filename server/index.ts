@@ -110,7 +110,7 @@ function parseFrameName(name: string): Frame | undefined {
 }
 
 new Koa()
-    .use(function *(m) {
+    .use(function *(m): IterableIterator<void> {
         m.set('Access-Control-Allow-Origin', '*');
     })
     .use(router.routes())
