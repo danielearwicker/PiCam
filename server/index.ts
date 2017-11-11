@@ -26,10 +26,10 @@ router.get('/version', async ctx => {
 
 function cors<R>(handler: (ctx: Router.IRouterContext) => PromiseLike<R>) {
     return (ctx: Router.IRouterContext) => {
-        console.log(`Before - ${ctx.path}`);
+        log.info(`Before - ${ctx.path}`);
         const r = handler(ctx);
         ctx.response.set('Access-Control-Allow-Origin', '*');
-        console.log(`After - ${ctx.path}`);
+        log.info(`After - ${ctx.path}`);
         return r;
     }
 }
