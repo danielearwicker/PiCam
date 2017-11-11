@@ -18,7 +18,7 @@ async function loadFrameImage(camera: string, day: Date, info: Frame) {
         { hour, minute, second, ms, motion, frame } = info,
         path = `${hour}/${minute}/${second}/${ms}/${motion}/${frame}`;
 
-    return await (await fetch(`frame/${camera}/${day}/${path}`)).blob();
+    return await (await fetch(`frame/${camera}/${dayPath}/${path}`)).blob();
 }
 
 const dayAsString = {
