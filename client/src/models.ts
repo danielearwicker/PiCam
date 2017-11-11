@@ -77,9 +77,9 @@ export class DayFrames {
 
                 } catch (x) { }
             }
-        }
 
-        await sleep(1000);
+            await sleep(2000);
+        }
     }
 }
 

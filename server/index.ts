@@ -10,7 +10,7 @@ import { sleep, cancellation, pad, Frame, msFromFrame } from "picam-common";
 
 const rootDir = path.normalize(path.join(__dirname, ".."));
 const dataDir = path.normalize(path.join(rootDir, "data"));
-const staticDir = path.normalize(path.join(rootDir, "..", "client"));
+const staticDir = path.normalize(path.join(rootDir, "..", "client", "build"));
 
 const router = new Router();
 
