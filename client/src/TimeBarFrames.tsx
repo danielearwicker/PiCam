@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Frame, msFromFrame } from "../../common/api";
+import { Frame, msFromFrame } from "picam-common";
 import { pure, mean, max } from "./util";
 import { TimeBarLine } from "./TimeBarLine";
 import { msPerDay, viewWidth, barWidthMs } from "./constants";

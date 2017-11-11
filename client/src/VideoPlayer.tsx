@@ -1,5 +1,5 @@
 import * as React from "react";
-import { pad } from "../../common/pad";
+import { pad } from "picam-common";
 import { TimeBar } from "./TimeBar";
 import { TextInput } from "bidi-mobx";
 import { VideoPlayerModel } from "./models";

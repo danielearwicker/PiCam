@@ -1,7 +1,5 @@
 import { observable, action, computed, runInAction } from "mobx";
-import { Frame, msFromFrame } from "../../common/api";
-import { sleep } from "../../common/sleep";
-import { pad } from "../../common/pad";
+import { sleep, pad, Frame, msFromFrame } from "picam-common";
 import { field } from "bidi-mobx";
 
 function getDayPath(day: Date) {
