@@ -111,8 +111,10 @@ function parseFrameName(name: string): Frame | undefined {
 
 new Koa()
     .use(async (ctx, next) => {
+        console.log("Before-oo");
         await next();
         ctx.response.set('Access-Control-Allow-Origin', '*');
+        console.log("After-oo");
     })
     .use(router.routes())
     .use(router.allowedMethods())
