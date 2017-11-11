@@ -212,6 +212,8 @@ export class VideoPlayer {
     private async play() {
 
         for (;;) {
+            await sleep(10);
+
             const day = this.currentDay;
             const camera = this.cameraSelection.currentCamera;
             if (!day || !camera) {
