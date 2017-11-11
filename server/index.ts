@@ -178,8 +178,9 @@ async function createIfNeeded(dir: string) {
     }
 }
 
-
 async function startup(...devices: string[]) {
+
+    log.info("startsies");
 
     await createIfNeeded(dataDir);
 
