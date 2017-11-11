@@ -3,13 +3,11 @@ import * as path from "path";
 import { promisify } from "util";
 import { spawn } from "child_process";
 import * as log4js from "log4js";
-import * as express from "express";
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import * as koaStatic from "koa-static";
-import { Frame, msFromFrame } from "../common/api";
-import { pad } from "../common/pad";
-import { sleep, cancellation } from "../common/sleep";
+import * as cors from "koa2-cors";
+import { sleep, cancellation, pad, Frame, msFromFrame } from "picam-common";
 
 const rootDir = path.normalize(path.join(__dirname, "..", ".."));
 const dataDir = path.normalize(path.join(rootDir, "data"));
@@ -112,7 +110,8 @@ function parseFrameName(name: string): Frame | undefined {
     return { hour, minute, second, ms, frame, motion };
 }
 
-new Koa().use(router.routes())
+new Koa().use(cors())
+         .use(router.routes())
          .use(router.allowedMethods())
          .use(koaStatic(staticDir, {
              hidden: true // to allow Let's Encrypt cert verify
