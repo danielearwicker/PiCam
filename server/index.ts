@@ -24,9 +24,17 @@ router.get('/version', async ctx => {
     };
 });
 
-router.get('/cameras', async ctx => {
+function cors<R>(handler: (ctx: Router.IRouterContext) => PromiseLike<R>) {
+    return (ctx: Router.IRouterContext) => {
+        const r = handler(ctx);
+        ctx.response.set('Access-Control-Allow-Origin', '*');
+        return r;
+    }
+}
+
+router.get('/cameras', cors(async ctx => {
     ctx.body = (await fs.readdir(dataDir)).filter(n => n[0] !== '.');
-});
+}));
 
 interface CameraContext extends Router.IRouterContext {
     params: {
@@ -41,7 +49,7 @@ interface CameraContext extends Router.IRouterContext {
     }
 }
 
-router.get('/camera/:device/:year/:month/:date', async (ctx: CameraContext) => {
+router.get('/camera/:device/:year/:month/:date', cors(async (ctx: CameraContext) => {
 
     const { device, year, month, date } = ctx.params;
     const threshold = parseInt(ctx.query.threshold || "1", 10);
@@ -54,7 +62,7 @@ router.get('/camera/:device/:year/:month/:date', async (ctx: CameraContext) => {
     ctx.body = frameFiles.map(parseFrameName)
                          .filter(f => f && f.motion >= threshold && 
                                     (msFromFrame(f) > after));
-});
+}));
 
 interface FrameContext extends Router.IRouterContext {
     params: {
@@ -71,8 +79,10 @@ interface FrameContext extends Router.IRouterContext {
     }
 }
 
-router.get('/frame/:device/:year/:month/:date/:hour/:minute/:second/:ms/:motion/:counter', async (ctx: FrameContext) => {
-
+router.get(
+    '/frame/:device/:year/:month/:date/:hour/:minute/:second/:ms/:motion/:counter', 
+    cors(async (ctx: FrameContext
+) => {
     const { device, year, month, date, hour, minute, second, ms, motion, counter } = ctx.params;
 
     const frameDir = path.join(dataDir, device, "archive", pad(year, 4), pad(month, 2), pad(date, 2));
@@ -86,7 +96,7 @@ router.get('/frame/:device/:year/:month/:date/:hour/:minute/:second/:ms/:motion/
 
     ctx.type = "image/jpg";
     ctx.body = await fs.readFile(full); 
-});
+}));
 
 function parseFrameName(name: string): Frame | undefined {
     if (name[0] === '.') {
@@ -110,12 +120,6 @@ function parseFrameName(name: string): Frame | undefined {
 }
 
 new Koa()
-    .use(async (ctx, next) => {
-        console.log("Before-oo");
-        await next();
-        ctx.response.set('Access-Control-Allow-Origin', '*');
-        console.log("After-oo");
-    })
     .use(router.routes())
     .use(router.allowedMethods())
     .use(koaStatic(staticDir, {
