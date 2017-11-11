@@ -8,7 +8,7 @@ import * as Router from "koa-router";
 import * as koaStatic from "koa-static";
 import { sleep, cancellation, pad, Frame, msFromFrame } from "picam-common";
 
-const rootDir = path.normalize(path.join(__dirname, "..", ".."));
+const rootDir = path.normalize(path.join(__dirname, ".."));
 const dataDir = path.normalize(path.join(rootDir, "data"));
 const staticDir = path.normalize(path.join(rootDir, "..", "client"));
 
