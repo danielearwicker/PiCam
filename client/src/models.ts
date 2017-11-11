@@ -2,6 +2,8 @@ import { observable, action, computed, runInAction } from "mobx";
 import { sleep, pad, Frame, msFromFrame } from "picam-common";
 import { field } from "bidi-mobx";
 
+const baseUrl = "http://drepi3:3030";
+
 function getDayPath(day: Date) {
     return `${day.getFullYear()}/${day.getMonth() + 1}/${day.getDate()}`;
 }
@@ -16,7 +18,7 @@ async function loadFrameImage(camera: string, day: Date, info: Frame) {
         { hour, minute, second, ms, motion, frame } = info,
         path = `${hour}/${minute}/${second}/${ms}/${motion}/${frame}`;
 
-    return await (await fetch(`frame/${camera}/${dayPath}/${path}`)).blob();
+    return await (await fetch(`${baseUrl}/frame/${camera}/${dayPath}/${path}`)).blob();
 }
 
 const dayAsString = {
@@ -59,7 +61,7 @@ export class DayFrames {
         while (new Date().getTime() < (this.day.getTime() + (24 * 60 * 60 * 1000))) {
             if (new Date().getTime() > this.day.getTime()) {
 
-                let uri = `camera/${this.camera.name}/${getDayPath(this.day)}`;
+                let uri = `${baseUrl}/camera/${this.camera.name}/${getDayPath(this.day)}`;
                 const lastFrame = this.frames[this.frames.length - 1];
                 if (lastFrame) {
                     uri += "?after=" + JSON.stringify(lastFrame);
@@ -102,7 +104,7 @@ export class VideoArchive {
     }
 
     private async load() {        
-        this.init(await (await fetch("cameras")).json());
+        this.init(await (await fetch(`${baseUrl}/cameras`)).json());
     }
 
     @action

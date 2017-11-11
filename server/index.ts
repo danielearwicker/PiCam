@@ -110,7 +110,7 @@ function parseFrameName(name: string): Frame | undefined {
     return { hour, minute, second, ms, frame, motion };
 }
 
-new Koa().use(cors())
+new Koa().use(cors({ origin: () => true }))
          .use(router.routes())
          .use(router.allowedMethods())
          .use(koaStatic(staticDir, {
