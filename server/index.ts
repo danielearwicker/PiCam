@@ -6,7 +6,6 @@ import * as log4js from "log4js";
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import * as koaStatic from "koa-static";
-import * as cors from "koa2-cors";
 import { sleep, cancellation, pad, Frame, msFromFrame } from "picam-common";
 
 const rootDir = path.normalize(path.join(__dirname, "..", ".."));
@@ -110,13 +109,16 @@ function parseFrameName(name: string): Frame | undefined {
     return { hour, minute, second, ms, frame, motion };
 }
 
-new Koa().use(router.routes())
-         .use(router.allowedMethods())
-         .use(koaStatic(staticDir, {
-             hidden: true // to allow Let's Encrypt cert verify
-         }))
-         .use(cors({ origin: () => true }))
-         .listen(3030);
+new Koa()
+    .use(function *(m) {
+        m.set('Access-Control-Allow-Origin', '*');
+    })
+    .use(router.routes())
+    .use(router.allowedMethods())
+    .use(koaStatic(staticDir, {
+        hidden: true // to allow Let's Encrypt cert verify
+    }))
+    .listen(3030);
 
 log4js.configure({
     appenders: [{ 
