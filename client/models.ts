@@ -84,19 +84,13 @@ export class DayFrames {
 
 export class CameraArchive {
 
-    private readonly days = observable.map<DayFrames>();
+    private readonly days: { [key: string]: DayFrames } = {};
     
     constructor(public readonly name: string) {}
 
     getDay(day: Date) {
         const key = getDayPath(day);
-        const existing = this.days.get(key);
-        if (existing) {
-            existing;
-        }
-        const created = new DayFrames(this, day);
-        this.days.set(key, created);
-        return created;
+        return this.days[key] || (this.days[key] = new DayFrames(this, day));
     }
 }
 
