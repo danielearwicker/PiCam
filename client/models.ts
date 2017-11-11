@@ -42,7 +42,7 @@ const dayAsString = {
 
 export class DayFrames {
 
-    @observable frames: Frame[];
+    @observable frames: Frame[] = [];
 
     constructor(
         public readonly camera: CameraArchive,
