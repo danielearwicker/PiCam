@@ -1,3 +1,3 @@
-const publicUrl = "http://earwicker.ddns.net:3030";
+const debugUrl = "http://drepi3:3030";
 
-export const baseUrl = process.env.NODE_ENV === "production" ? publicUrl : location.origin;
+export const baseUrl = process.env.NODE_ENV === "production" ? location.origin : debugUrl;
