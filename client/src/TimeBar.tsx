@@ -13,7 +13,7 @@ function timeBarPixelsFromMs(ms: number) {
 }
 
 function timeBarPixelsFromFrameIndex(frames: Frame[], index?: number) {
-    if (index == undefined || index < 0 || index >= frames.length) {
+    if (index === undefined || index < 0 || index >= frames.length) {
         return undefined;
     }
 
@@ -37,11 +37,10 @@ export class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
         this.state = { };
     }
 
-    mouseMove = (e: React.MouseEvent<SVGElement>) => {
+    setPlaybackHover(pos: number) {
         let hover: number|undefined = undefined;
 
-        const ms = msFromTimeBarPixels(e.clientX - 
-            e.currentTarget.getBoundingClientRect().left);
+        const ms = msFromTimeBarPixels(pos);
 
         const l = this.props.frames.length;
         for (let f = 0; f < l; f++) {
@@ -60,6 +59,11 @@ export class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
         this.setState({ hover });
     }
 
+    mouseMove = (e: React.MouseEvent<SVGElement>) => {
+        this.setPlaybackHover(e.clientX -
+            e.currentTarget.getBoundingClientRect().left);
+    }
+
     mouseLeave = (e: React.MouseEvent<SVGElement>) => {
         this.setState({ hover: undefined });
     }
@@ -70,18 +74,36 @@ export class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
         }
     }
 
+    touchStart = (e: React.TouchEvent<SVGElement>) => {
+        this.setPlaybackHover(e.touches[0].clientX -
+            e.currentTarget.getBoundingClientRect().left);
+        if (this.state.hover !== undefined) {
+            this.props.frameClicked(this.state.hover);
+        }
+    }
+
     render() {
         const hover = timeBarPixelsFromFrameIndex(this.props.frames, this.state.hover);
         const selected = timeBarPixelsFromFrameIndex(this.props.frames, this.props.selected);
 
         return (
-            <svg width={640} height={20}
+            <svg 
+                width={640} 
+                height={20}
+                onTouchStart={this.touchStart}
                 onMouseMove={this.mouseMove}
                 onMouseLeave={this.mouseLeave}
                 onMouseDown={this.mouseDown}>
                 <TimeBarFrames frames={this.props.frames} />
-                { hover !== undefined ? <TimeBarLine stroke="blue" x={hover}/> : undefined }
-                { selected !== undefined ? <TimeBarLine stroke="green" x={selected}/> : undefined }
+                { 
+                    hover !== undefined ? 
+                        <TimeBarLine stroke="blue" x={hover}/> :
+                        undefined 
+                }
+                {
+                    selected !== undefined ?
+                        <TimeBarLine stroke="green" x={selected}/> : undefined
+                }
             </svg>
         );
     }

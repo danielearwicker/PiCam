@@ -2,7 +2,7 @@ import { observable, action, computed, runInAction } from "mobx";
 import { sleep, pad, Frame, msFromFrame } from "picam-common";
 import { field } from "bidi-mobx";
 
-const baseUrl = "http://drepi3:3030";
+const baseUrl = "http://earwicker.ddns.net:3030";
 
 function getDayPath(day: Date) {
     return `${day.getFullYear()}/${day.getMonth() + 1}/${day.getDate()}`;
@@ -23,7 +23,7 @@ async function loadFrameImage(camera: string, day: Date, info: Frame) {
 
 const dayAsString = {
     render(now: Date) {
-        return `${pad(now.getFullYear(), 4)}-${pad(now.getMonth() + 1, 2)}-${pad(now.getDay(), 2)}`;
+        return `${pad(now.getFullYear(), 4)}-${pad(now.getMonth() + 1, 2)}-${pad(now.getDate(), 2)}`;
     },
     parse(str: string) {
         const parts = str.split("-");
@@ -49,7 +49,7 @@ export class DayFrames {
         public readonly camera: CameraArchive,
         public readonly day: Date
     ) {
-        this.fetch();
+        this.startFetching();
     }
 
     @action
@@ -57,29 +57,35 @@ export class DayFrames {
         this.frames = this.frames.concat(frames);
     }
 
-    async fetch() {
+    async startFetching() {
+        await this.fetch();
+
         while (new Date().getTime() < (this.day.getTime() + (24 * 60 * 60 * 1000))) {
             if (new Date().getTime() > this.day.getTime()) {
 
-                let uri = `${baseUrl}/camera/${this.camera.name}/${getDayPath(this.day)}`;
-                const lastFrame = this.frames[this.frames.length - 1];
-                if (lastFrame) {
-                    uri += "?after=" + JSON.stringify(lastFrame);
-                }
-
-                try {
-                    const frames = (await (await fetch(uri)).json()) as Frame[];
-                    if (frames.length) {
-                        frames.sort(compareFrames);
-                        this.append(frames);                
-                    }
-
-
-                } catch (x) { }
+                await this.fetch();
             }
 
             await sleep(2000);
         }
+    }
+
+    async fetch() {
+        let uri = `${baseUrl}/camera/${this.camera.name}/${getDayPath(this.day)}`;
+        const lastFrame = this.frames[this.frames.length - 1];
+        if (lastFrame) {
+            uri += "?after=" + JSON.stringify(lastFrame);
+        }
+
+        try {
+            const frames = (await (await fetch(uri)).json()) as Frame[];
+            if (frames.length) {
+                frames.sort(compareFrames);
+                this.append(frames);                
+            }
+
+
+        } catch (x) { }
     }
 }
 

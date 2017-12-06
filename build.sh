@@ -1,7 +1,7 @@
 git pull
 pushd client
 npm install
-npx webpack
+npm build
 popd
 pushd server
 npm install
