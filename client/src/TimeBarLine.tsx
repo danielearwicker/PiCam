@@ -13,4 +13,3 @@ export const TimeBarLine = pure(({ x, stroke, height }: TimeBarLineProps) => {
     }
     return <line key={x} x1={x} y1={(1-height)*20} x2={x} y2={20} stroke={stroke}/>;
 });
-

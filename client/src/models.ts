@@ -1,8 +1,7 @@
 import { observable, action, computed, runInAction } from "mobx";
 import { sleep, pad, Frame, msFromFrame } from "picam-common";
 import { field } from "bidi-mobx";
-
-const baseUrl = "http://earwicker.ddns.net:3030";
+import { baseUrl } from "./config";
 
 function getDayPath(day: Date) {
     return `${day.getFullYear()}/${day.getMonth() + 1}/${day.getDate()}`;
