@@ -1,5 +1,5 @@
-import * as React from 'react';
-import './App.css';
+import * as React from "react";
+import "./App.css";
 import { VideoArchive, CameraSelection, VideoPlayerModel } from "./models";
 import { VideoPlayer } from "./VideoPlayer";
 

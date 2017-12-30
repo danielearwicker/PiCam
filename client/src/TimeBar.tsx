@@ -93,7 +93,8 @@ export class TimeBar extends React.Component<TimeBarProps, TimeBarState> {
                 onTouchStart={this.touchStart}
                 onMouseMove={this.mouseMove}
                 onMouseLeave={this.mouseLeave}
-                onMouseDown={this.mouseDown}>
+                onMouseDown={this.mouseDown}
+            >
                 <TimeBarFrames frames={this.props.frames} />
                 { 
                     hover !== undefined ? 

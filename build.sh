@@ -1,9 +1,9 @@
 # sudo service PiCam stop
-pushd client
+# pushd client
 # npm install
-npm run build
-popd
-# pushd server
+# npm run build
+# popd
+pushd server
 # npm install
-# npx tsc
+npx tsc
 # sudo service PiCam start

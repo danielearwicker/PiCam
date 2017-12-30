@@ -5,7 +5,7 @@ export function pure<Props>(func: (props: Props) => JSX.Element) {
         render() {
             return func(this.props);
         }
-    }
+    };
 }
 
 export function sum(ar: number[]) {

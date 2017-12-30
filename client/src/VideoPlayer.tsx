@@ -33,9 +33,11 @@ export const VideoPlayer = observer(({model}: {
             {dayNav}
             <img width="640" height="480" src={model.frameSrc}/>
             <div>
-                <TimeBar frames={model.frames} 
-                         selected={model.neededFrameIndex}
-                         frameClicked={model.frameClicked}/>
+                <TimeBar 
+                    frames={model.frames} 
+                    selected={model.neededFrameIndex}
+                    frameClicked={model.frameClicked}
+                />
             </div>
             <div>
                 <button onClick={model.togglePause}>{model.paused ? "Play" : "Pause"}</button>
@@ -52,4 +54,3 @@ export const VideoPlayer = observer(({model}: {
         </div>
     );
 });
-

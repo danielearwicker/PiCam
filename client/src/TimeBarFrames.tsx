@@ -18,7 +18,7 @@ export const TimeBarFrames = pure(({ frames }: { frames: Frame[] }) => {
     for (const frame of frames) {
         const bar = Math.floor(msFromFrame(frame) / barWidthMs);
         if (bar < 0 || bar >= barCount) {
-            debugger;
+            continue;
         }
         bars[bar].push(frame);
     }
@@ -31,7 +31,7 @@ export const TimeBarFrames = pure(({ frames }: { frames: Frame[] }) => {
         {
             means.map((bar, i) => {
                 const x = i * barWidthPixels;
-                return <TimeBarLine key={x} stroke="silver" x={x} height={bar / maxMean}/>
+                return <TimeBarLine key={x} stroke="silver" x={x} height={bar / maxMean}/>;
             })
         }
         </svg>

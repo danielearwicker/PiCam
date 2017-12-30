@@ -83,8 +83,7 @@ export class DayFrames {
                 this.append(frames);                
             }
 
-
-        } catch (x) { }
+        } catch (x) { /* ignore */ }
     }
 }
 
@@ -120,9 +119,9 @@ export class VideoArchive {
 
 export class CameraSelection {
 
-    constructor(public readonly archive: VideoArchive) {}
-
     @observable private _currentCamera: CameraArchive | undefined;
+    
+    constructor(public readonly archive: VideoArchive) {}
 
     @computed get currentCamera() {
         return this._currentCamera || 
@@ -140,12 +139,18 @@ export class CameraSelection {
 
 export class VideoPlayerModel {
 
+    day = field(dayAsString).create(new Date());
+
+    @observable neededFrameIndex = -1;
+    @observable frameSrc: string;
+    @observable paused = false;
+
+    @observable private loadedFrameIndex = -1;
+    
     constructor(public readonly cameraSelection: CameraSelection) {
         this.play();
     }
-
-    day = field(dayAsString).create(new Date());
-
+    
     @computed get currentDay() {
         const camera = this.cameraSelection.currentCamera;
         if (this.day.model && camera) {
@@ -157,15 +162,10 @@ export class VideoPlayerModel {
     @computed get frames() {
         return this.currentDay && this.currentDay.frames || [];
     }
-
-    @observable neededFrameIndex = -1;
-    @observable private loadedFrameIndex = -1;
-    @observable frameSrc: string;
-    @observable paused = false;
-
+    
     @computed get currentFrame() {
         const frameIndex = Math.min(this.neededFrameIndex, this.frames.length - 1) || 0;
-        return frameIndex >=0 && this.frames[frameIndex];
+        return frameIndex >= 0 && this.frames[frameIndex];
     }
 
     @action
@@ -243,10 +243,10 @@ export class VideoPlayerModel {
                 runInAction(() => {
                     this.loadedFrameIndex = this.neededFrameIndex;
                     this.frameSrc = URL.createObjectURL(blob);
-                    this.neededFrameIndex += (this.paused ? 0 : 1)
+                    this.neededFrameIndex += (this.paused ? 0 : 1);
                 });
 
-            } catch (x) { }            
+            } catch (x) { /* ignore */ }
         }
     }
 }

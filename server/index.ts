@@ -26,10 +26,8 @@ router.get('/version', async ctx => {
 
 function cors<R>(handler: (ctx: Router.IRouterContext) => PromiseLike<R>) {
     return (ctx: Router.IRouterContext) => {
-        log.info(`Before - ${ctx.path}`);
         const r = handler(ctx);
         ctx.response.set('Access-Control-Allow-Origin', '*');
-        log.info(`After - ${ctx.path}`);
         return r;
     }
 }
@@ -346,6 +344,16 @@ async function monitorInput(device: string, dataDir: string) {
 
     const bufferDir = path.join(dataDir, "buffer");
     const archiveDir = path.join(dataDir, "archive");
+
+    const madShite = await fs.readdir(dataDir);
+
+    for (const m of madShite) {
+        if (m.startsWith("batch_")) {
+            const d = path.join(dataDir, m);
+            await recover(d, archiveDir);
+            await fs.rmdir(d);
+        }
+    }
 
     await recover(bufferDir, archiveDir);
 
